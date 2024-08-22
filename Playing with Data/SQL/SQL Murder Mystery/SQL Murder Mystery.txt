@@ -1,0 +1,74 @@
+This is a walk through of my thought process and steps taken to find whodunnit.
+
+
+https://mystery.knightlab.com/
+
+So this is how the story goes:
+A crime has taken place and the detective needs your help. The detective gave you the crime scene report, but you somehow lost it. You vaguely remember that the crime was a ​murder​ that occurred sometime on ​Jan.15, 2018​ and that it took place in ​SQL City​. Start by retrieving the corresponding crime scene report from the police department’s database.
+
+
+Right off the bat, we're given a command to get the tables found in this DB. 
+These are the results: 
+crime_scene_report
+drivers_license
+facebook_event_checkin
+interview
+get_fit_now_member
+get_fit_now_check_in
+solution
+income
+person
+
+
+SELECT *
+  FROM crime_scene_report
+ where date = '20180115' and city = 'SQL City'
+
+This command helps me to identify the actual crime and gather more details relevant to this crime.
+Luckily for me, this query only returns one murder. 
+The report indicates there were some witnesses, Annabel who lives on Franklin Ave and our second witness who lives on Northwestern Dr.
+
+Next, I ran this query to get details about this named witness.
+SELECT *
+  FROM person
+  where name like '%Annabel%' 
+
+I took the person ID from the result and headed over to the Interview table to get the details.
+
+SELECT *
+  FROM interview
+  where person_id = 16371
+
+From the interview, I got some details personally relating to Annabel that helped her identify the killer. I checked the tables and found that there was a table with gym membership records where I ran the query below.
+
+SELECT *
+  FROM get_fit_now_member
+  where name like '%Annabel%'
+
+From this result, I took the id as a relation to her gym membership and used it to check the checkin records.
+
+SELECT *
+  FROM get_fit_now_check_in
+  where check_in_date = '20180109'
+
+We find out that Annabel was there for an hr from 4pm to 5 pm. We find out that there were two people also at the gym during this period. I recorded their membership details aside and tried to chase down leads from the second witness(just to confirm who of the 2 is really guilty and also coz its more fun than just guessing between the two).
+
+SELECT *
+ from person
+ where address_street_name = 'Northwestern Dr' 
+ order by address_number
+
+From this query, we can get the details about the second witness. I took the person_id and ran the following query:
+
+SELECT *
+ from interview
+ where person_id = '14887'
+
+Now I do have to admit, I was lucky there was only 1 gym in the DB provided. The second witness, Morty, gives us the name and more clues about the criminal. I have cross checked the details from the interview with the 2 membership details I had noted down early.
+Morty's interview also revealed some critical information, that the criminal had left in a car and he had remembered the license plate.
+
+And I found the murderer but the caviar was still to come
+
+From this interview, I got some details about a suspect and started chasing down this lead. By looking at the drivers_license table, I found three possible personnel that matched the description given.
+
+From this, I decided to chase down the other lead from the interview. The suspect had claimed that he was paid by a woman who attended an event thrice in December. I checked the facebook event checkin table and deduced who'd dunnit.
